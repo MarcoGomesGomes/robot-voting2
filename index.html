@@ -37,7 +37,6 @@
     a{color:var(--accent); text-decoration:none}
     a:hover{text-decoration:underline}
 
-    /* Sticky header */
     header{
       position: sticky;
       top: 0;
@@ -99,7 +98,6 @@
 
     main{ padding: 18px 0 40px; }
 
-    /* Panels */
     .panel{
       background: linear-gradient(180deg, rgba(18,24,36,0.9), rgba(15,21,32,0.92));
       border: 1px solid var(--border);
@@ -131,7 +129,6 @@
       max-width: 780px;
     }
 
-    /* Form controls */
     .grid2{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -151,12 +148,6 @@
       font-size: 12px;
       color: var(--muted);
       margin-bottom: 8px;
-    }
-    .row{
-      display:flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
     }
     select, input[type="text"], input[type="number"], textarea{
       width: 100%;
@@ -181,7 +172,6 @@
       gap: 10px;
     }
     .inline > *{ flex: 1; }
-    .inline .tight{ flex: 0 0 auto; }
 
     .seg{
       display:flex;
@@ -205,7 +195,6 @@
     }
     .seg button:hover{ border-color: rgba(255,255,255,0.20); }
 
-    /* Product grid */
     .cards{
       margin-top: 16px;
       display:grid;
@@ -312,7 +301,6 @@
       line-height: 1.35;
     }
 
-    /* Submit section + preview */
     .submitRow{
       display:grid;
       grid-template-columns: 1.15fr 0.85fr;
@@ -414,7 +402,7 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>Product Voting Page</h1>
-          <p class="sub">Static (GitHub Pages) · Votes to Google Sheet via Form or Apps Script</p>
+          <p class="sub">Static (GitHub Pages) · Votes to Google Sheet via Google Form Prefill</p>
         </div>
       </div>
       <div class="badges">
@@ -429,14 +417,13 @@
 <main>
   <div class="wrap">
 
-    <!-- Configuration Panel -->
     <section class="panel" id="configPanel">
       <div class="phead">
         <div>
           <h2>Configuration</h2>
           <div class="help">
             Select how many products are shown, choose the voting model (M1/M2/M3), and choose submission method.
-            The payload preview shows exactly what will be submitted.
+            Payload preview shows exactly what will be submitted.
           </div>
         </div>
       </div>
@@ -465,11 +452,10 @@
             <label for="submitMethod">Submission method</label>
             <select id="submitMethod">
               <option value="FORM" selected>Google Form Prefill (opens new tab)</option>
-              <option value="WEBAPP">Apps Script Web App (POST JSON)</option>
+              <option value="WEBAPP">Apps Script Web App (POST JSON) (may fail due to CORS)</option>
             </select>
             <div class="hint">
-              Google Form: you must paste form URL + entry IDs placeholders in the code below.
-              Web App: uses your provided endpoint URL (editable in code).
+              Form mode is recommended for GitHub Pages (no CORS). Web App mode may show “Failed to fetch” depending on CORS.
             </div>
           </div>
 
@@ -503,19 +489,17 @@
       </div>
     </section>
 
-    <!-- Product Grid -->
     <section style="margin-top:16px;">
       <div class="cards" id="cards"></div>
     </section>
 
-    <!-- Submit + Payload Preview -->
     <section class="submitRow">
       <div class="panel">
         <div class="phead">
           <div>
             <h2>Submit vote</h2>
             <div class="help">
-              Validation is enforced (winner required in M1/M3, comment ≥ 8 chars). Submit is locked for the first 3 seconds.
+              Validation enforced (winner required in M1/M3, comment ≥ 8 chars). Submit locked for the first 3 seconds.
             </div>
           </div>
         </div>
@@ -523,7 +507,7 @@
           <div class="field">
             <label for="comment">Comment (required, min 8 characters)</label>
             <textarea id="comment" placeholder="Write at least 8 characters..."></textarea>
-            <div class="hint">Stored as-is in the payload. Keep it short and factual.</div>
+            <div class="hint">Stored as-is in the payload.</div>
           </div>
 
           <div class="grid2" style="margin-top:14px;">
@@ -561,7 +545,7 @@
             <div class="field">
               <label>Anti-spam gate</label>
               <div class="small" id="gateText">Submit unlocked after 3.0 s from page load.</div>
-              <div class="hint">This is a minimal friction gate (no CAPTCHA). You can change to a checkbox if needed.</div>
+              <div class="hint">Gate: time-based (3 s).</div>
             </div>
           </div>
 
@@ -576,7 +560,7 @@
           </div>
 
           <div class="help" style="margin-top:10px;">
-            Google Form mode opens a new tab with a prefilled form URL (no secrets). Apps Script mode uses `fetch()` POST and requires correct CORS settings in the script.
+            In FORM mode, a new tab opens with a prefilled Google Form URL. You must click “Submit” in the form to write into the Sheet.
           </div>
         </div>
       </div>
@@ -585,7 +569,7 @@
         <div class="phead">
           <div>
             <h2>Payload preview</h2>
-            <div class="help">This JSON is generated at submit time (and updated when inputs change).</div>
+            <div class="help">JSON updated when inputs change.</div>
           </div>
         </div>
         <div class="pbody">
@@ -598,8 +582,8 @@
       <div class="wrap foot">
         <div class="small">
           <div><strong>Notes</strong></div>
-          <div>Static hosting only (GitHub Pages). No tokens/secrets embedded.</div>
-          <div>Google Form prefilling requires you to paste the Form URL and entry IDs in code.</div>
+          <div>Static hosting only. No tokens/secrets embedded.</div>
+          <div>Google Form prefilling uses entry IDs copied from your prefill link.</div>
         </div>
         <div class="small">
           <div><strong>Build</strong></div>
@@ -615,86 +599,75 @@
 <script>
 /**
  * ===========================
- * CONFIG (YOU MUST EDIT THIS)
+ * CONFIG
  * ===========================
- * Do NOT embed secrets. These are public endpoints/IDs.
  */
 
 // (A) Page metadata
 const PAGE_VERSION = "v1.0";
 
-// (B) Google Form prefill placeholders (REQUIRED for FORM mode)
-const GOOGLE_FORM_URL = "<<PASTE_GOOGLE_FORM_URL>>"; // e.g. "https://docs.google.com/forms/d/e/FORM_ID/viewform"
+/**
+ * (B) Google Form URL (BASE, no query string)
+ * From your link:
+ * https://docs.google.com/forms/d/e/1FAIpQLSdLBYl_8D7jtwy8vfBuPFc2blI_0MnEW-QtA8OyVyO9SFc_Ug/viewform
+ */
+const GOOGLE_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSdLBYl_8D7jtwy8vfBuPFc2blI_0MnEW-QtA8OyVyO9SFc_Ug/viewform";
 
-// Map payload fields -> Google Form entry IDs (REPLACE placeholders with real entry IDs).
-// IMPORTANT: Do NOT invent these. Get them from your Google Form prefill URL or Form field "entry.xxxxx" IDs.
+/**
+ * (C) Google Form entry IDs (FROM YOUR PREFILL LINK)
+ * You provided 11 entry IDs.
+ *
+ * WARNING (mapping): Google Forms uses entry IDs per question, but the IDs don’t tell which question they are.
+ * This mapping assigns IDs to the page payload fields in a consistent order, and adds 2 extra fields to match your 11 questions.
+ * If you see the wrong data landing in the wrong Google Form field, swap the entry IDs here.
+ */
 const GOOGLE_FORM_ENTRY_MAP = {
-  timestamp_utc: "<<ENTRY_123456_TIMESTAMP>>",
-  page_version:  "<<ENTRY_123456_PAGE_VERSION>>",
-  mode:          "<<ENTRY_123456_MODE>>",
-  product_count_shown: "<<ENTRY_123456_PRODUCT_COUNT>>",
-  winner:        "<<ENTRY_123456_WINNER>>",
-  ratings_json:  "<<ENTRY_123456_RATINGS_JSON>>",
-  comment:       "<<ENTRY_123456_COMMENT>>",
-  age_range:     "<<ENTRY_123456_AGE_RANGE>>",
-  profile:       "<<ENTRY_123456_PROFILE>>"
+  timestamp_utc:       "entry.410114571",
+  page_version:        "entry.236556869",
+  mode:                "entry.313954528",
+  product_count_shown: "entry.428161037",
+  winner:              "entry.542720055",
+  ratings_json:        "entry.1365781753",
+  comment:             "entry.1189350349",
+  age_range:           "entry.1223331145",
+  profile:             "entry.2113609591",
+  extra_1:             "entry.476859855",
+  extra_2:             "entry.1455782426"
 };
 
-// (C) Apps Script Web App endpoint (optional). You provided a URL; it is prefilled here.
-const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbzKIbBCLYNaWRECrOU3Z-5ZooVXRf2Pfn6_PbZDJ_Fi_xHQVfccyVmv5ndNUhcEe74ysw/exec";
+// (D) Optional Apps Script Web App endpoint (kept, but FORM is recommended for GitHub Pages)
+const APPS_SCRIPT_WEBAPP_URL =
+  "https://script.google.com/macros/s/AKfycbyULxTgxAzdmUTgZIOoOk04BH-mc48vGTogCcn3nHhW89dHSdBy44i6d1-tm6WabldCDQ/exec";
 
-// (D) Products (placeholders A..F)
+// (E) Products (placeholders A..F)
 const PRODUCTS = [
-  {
-    id:"A",
-    label:"Concept A",
-    name:"Product A",
-    price:"€TBD",
+  { id:"A", label:"Concept A", name:"Product A", price:"€TBD",
     oneLiner:"One-liner description for Product A (replace with real text).",
     bullets:["Bullet A1 (replace)","Bullet A2 (replace)","Bullet A3 (replace)"],
     images:["prod_a_1.png","prod_a_2.png"]
   },
-  {
-    id:"B",
-    label:"Concept B",
-    name:"Product B",
-    price:"€TBD",
+  { id:"B", label:"Concept B", name:"Product B", price:"€TBD",
     oneLiner:"One-liner description for Product B (replace with real text).",
     bullets:["Bullet B1 (replace)","Bullet B2 (replace)","Bullet B3 (replace)"],
     images:["prod_b_1.png","prod_b_2.png"]
   },
-  {
-    id:"C",
-    label:"Concept C",
-    name:"Product C",
-    price:"€TBD",
+  { id:"C", label:"Concept C", name:"Product C", price:"€TBD",
     oneLiner:"One-liner description for Product C (replace with real text).",
     bullets:["Bullet C1 (replace)","Bullet C2 (replace)","Bullet C3 (replace)"],
     images:["prod_c_1.png","prod_c_2.png"]
   },
-  {
-    id:"D",
-    label:"Concept D",
-    name:"Product D",
-    price:"€TBD",
+  { id:"D", label:"Concept D", name:"Product D", price:"€TBD",
     oneLiner:"One-liner description for Product D (replace with real text).",
     bullets:["Bullet D1 (replace)","Bullet D2 (replace)","Bullet D3 (replace)"],
     images:["prod_d_1.png","prod_d_2.png"]
   },
-  {
-    id:"E",
-    label:"Concept E",
-    name:"Product E",
-    price:"€TBD",
+  { id:"E", label:"Concept E", name:"Product E", price:"€TBD",
     oneLiner:"One-liner description for Product E (replace with real text).",
     bullets:["Bullet E1 (replace)","Bullet E2 (replace)","Bullet E3 (replace)"],
     images:["prod_e_1.png","prod_e_2.png"]
   },
-  {
-    id:"F",
-    label:"Concept F",
-    name:"Product F",
-    price:"€TBD",
+  { id:"F", label:"Concept F", name:"Product F", price:"€TBD",
     oneLiner:"One-liner description for Product F (replace with real text).",
     bullets:["Bullet F1 (replace)","Bullet F2 (replace)","Bullet F3 (replace)"],
     images:["prod_f_1.png","prod_f_2.png"]
@@ -707,11 +680,11 @@ const PRODUCTS = [
  * ===========================
  */
 let state = {
-  mode: "M1",                // M1/M2/M3
-  submitMethod: "FORM",      // FORM/WEBAPP
-  productCountShown: 6,      // N
-  winnerId: "",              // selected product id when required
-  startedAtMs: Date.now(),   // anti-spam gate start
+  mode: "M1",                 // M1/M2/M3
+  submitMethod: "FORM",       // FORCE default to FORM (recommended)
+  productCountShown: 6,       // N
+  winnerId: "",               // winner selection
+  startedAtMs: Date.now()     // anti-spam gate start
 };
 
 /**
@@ -749,6 +722,9 @@ const elROverall = document.getElementById("r_overall");
 function init(){
   elPageVersionBadge.textContent = PAGE_VERSION;
 
+  // Ensure dropdown matches forced default state
+  elSubmitMethod.value = state.submitMethod;
+
   // N selector: 2..12
   const opts = [];
   for(let n=2; n<=12; n++){
@@ -759,26 +735,20 @@ function init(){
   }
   elProductCount.replaceChildren(...opts);
 
-  // default to 6 (clamp to available)
   state.productCountShown = clampN(6);
   elProductCount.value = String(state.productCountShown);
 
-  // anti-spam
   state.startedAtMs = Date.now();
   setGateUI(0);
 
-  // mode buttons
   document.querySelectorAll(".modeBtn").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      setMode(btn.dataset.mode);
-    });
+    btn.addEventListener("click", ()=> setMode(btn.dataset.mode));
   });
 
   elProductCount.addEventListener("change", ()=>{
     const n = parseInt(elProductCount.value, 10);
     state.productCountShown = clampN(n);
     elProductCount.value = String(state.productCountShown);
-    // winner may become invalid if N decreases
     if(state.winnerId && !getVisibleProducts().some(p=>p.id===state.winnerId)){
       state.winnerId = "";
     }
@@ -797,6 +767,7 @@ function init(){
   });
 
   elBtnSubmit.addEventListener("click", onSubmit);
+
   elBtnReset.addEventListener("click", ()=>{
     state.winnerId = "";
     elComment.value = "";
@@ -813,13 +784,10 @@ function init(){
   setMode("M1");
   render();
 
-  // gate tick
   const timer = setInterval(()=>{
     const elapsed = (Date.now() - state.startedAtMs) / 1000;
     setGateUI(elapsed);
-    if(elapsed >= 3){
-      clearInterval(timer);
-    }
+    if(elapsed >= 3) clearInterval(timer);
   }, 100);
 }
 
@@ -828,7 +796,6 @@ function clampN(n){
   const nn = Math.max(2, Math.min(12, n));
   return Math.min(nn, max);
 }
-
 function getVisibleProducts(){
   return PRODUCTS.slice(0, state.productCountShown);
 }
@@ -840,14 +807,10 @@ function setMode(mode){
   });
   elModeBadge.textContent = mode;
 
-  // show/hide ratings panel
   const hasRatings = (mode === "M2" || mode === "M3");
   elRatingsField.style.display = hasRatings ? "block" : "none";
 
-  // if mode is M2, winner irrelevant
-  if(mode === "M2"){
-    state.winnerId = "";
-  }
+  if(mode === "M2") state.winnerId = "";
 
   renderStatus("WAIT", "Voting model updated.", "warn");
   render();
@@ -863,7 +826,6 @@ function setGateUI(elapsedSeconds){
   }else{
     elSpamBadge.textContent = "unlocked";
     elGateText.textContent = "Submit unlocked (3.0 s gate passed).";
-    // do not force enable; validation will decide
     validateAndToggleSubmit();
   }
 }
@@ -975,7 +937,7 @@ function escapeHtml(s){
  */
 function buildPayload(){
   const now = new Date();
-  const payload = {
+  return {
     timestamp_utc: now.toISOString(),
     page_version: PAGE_VERSION,
     mode: state.mode,
@@ -989,31 +951,24 @@ function buildPayload(){
     } : null,
     comment: (elComment.value || "").trim(),
     age_range: (elAgeRange.value || "").trim(),
-    profile: (elProfile.value || "").trim()
+    profile: (elProfile.value || "").trim(),
+
+    // Extra fields to match your 11-question form (leave empty unless you want to use them)
+    extra_1: "",
+    extra_2: ""
   };
-  return payload;
 }
 
 function validatePayload(payload){
   const errors = [];
 
-  // gate
   const elapsed = (Date.now() - state.startedAtMs) / 1000;
-  if(elapsed < 3){
-    errors.push(`Anti-spam gate: wait ${(3 - elapsed).toFixed(1)} s`);
-  }
+  if(elapsed < 3) errors.push(`Anti-spam gate: wait ${(3 - elapsed).toFixed(1)} s`);
 
-  // comment length
-  if(!payload.comment || payload.comment.length < 8){
-    errors.push("Comment must be at least 8 characters");
-  }
+  if(!payload.comment || payload.comment.length < 8) errors.push("Comment must be at least 8 characters");
 
-  // winner required for M1/M3
-  if((payload.mode === "M1" || payload.mode === "M3") && !payload.winner){
-    errors.push("Winner selection is required for M1/M3");
-  }
+  if((payload.mode === "M1" || payload.mode === "M3") && !payload.winner) errors.push("Winner selection is required for M1/M3");
 
-  // ratings exist for M2/M3 (defaults allowed, but ensure present)
   if(payload.mode === "M2" || payload.mode === "M3"){
     if(!payload.ratings || ["design","value","feasibility","overall"].some(k => typeof payload.ratings[k] !== "number")){
       errors.push("Ratings fields missing/invalid");
@@ -1027,11 +982,8 @@ function validateAndToggleSubmit(){
   const payload = buildPayload();
   const errors = validatePayload(payload);
   elBtnSubmit.disabled = (errors.length > 0);
-  if(errors.length === 0){
-    renderStatus("READY", "Ready to submit.", "good", true);
-  }else{
-    renderStatus("CHECK", errors[0], "warn", true);
-  }
+  if(errors.length === 0) renderStatus("READY", "Ready to submit.", "good", true);
+  else renderStatus("CHECK", errors[0], "warn", true);
 }
 
 function renderPreview(){
@@ -1041,38 +993,24 @@ function renderPreview(){
 }
 
 function renderStatus(label, text, type, silent){
-  // type: good/warn/bad
   elStatusFlag.textContent = label;
   elStatusFlag.className = `flag ${type || "warn"}`;
   elStatusText.textContent = text || "";
-  if(!silent){
-    // no-op; reserved for possible future: scroll/focus
-  }
+  if(!silent){ /* no-op */ }
 }
 
 /**
  * ===========================
- * SUBMISSION MODES
+ * SUBMISSION
  * ===========================
  */
 
-/**
- * Google Form Prefill URL generator.
- * It maps payload keys -> entry IDs (entry.xxxxx) and attaches them as query parameters.
- *
- * @param {string} formUrl - Google Form base URL (viewform)
- * @param {Object} mapping - payloadKey -> "entry.xxxxx" string
- * @param {Object} payload - vote payload
- * @returns {string} fully built URL
- */
 function buildPrefillUrl(formUrl, mapping, payload){
-  // NOTE: Google Forms typically accept prefill params like ?entry.123=VALUE
-  // This function assumes mapping values already look like "entry.123456789".
   const url = new URL(formUrl);
 
-  // Flatten to strings; keep unknowns empty
   const ratingsJson = payload.ratings ? JSON.stringify(payload.ratings) : "";
 
+  // Values we can send
   const valuesByKey = {
     timestamp_utc: payload.timestamp_utc,
     page_version: payload.page_version,
@@ -1082,69 +1020,42 @@ function buildPrefillUrl(formUrl, mapping, payload){
     ratings_json: ratingsJson,
     comment: payload.comment || "",
     age_range: payload.age_range || "",
-    profile: payload.profile || ""
+    profile: payload.profile || "",
+    extra_1: payload.extra_1 || "",
+    extra_2: payload.extra_2 || ""
   };
 
   for(const [key, entryId] of Object.entries(mapping)){
-    if(!entryId || entryId.includes("<<")){
-      // leave unmapped placeholders untouched; do not invent.
-      continue;
-    }
+    if(!entryId) continue;
     url.searchParams.set(entryId, valuesByKey[key] ?? "");
   }
   return url.toString();
 }
 
+function submitViaGoogleForm(payload){
+  const prefillUrl = buildPrefillUrl(GOOGLE_FORM_URL, GOOGLE_FORM_ENTRY_MAP, payload);
+  window.open(prefillUrl, "_blank", "noopener,noreferrer");
+  return prefillUrl;
+}
+
 async function submitViaWebApp(payload){
   const url = APPS_SCRIPT_WEBAPP_URL;
-
-  if(!url || url.includes("<<")){
-    throw new Error("Apps Script URL is not set.");
-  }
-
-  // CORS note: the script must respond with appropriate headers.
-  // Client-side only: we attempt fetch() and display result.
   const res = await fetch(url, {
     method: "POST",
     mode: "cors",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });
-
-  // Some Apps Script deployments return 302 or text/html; handle best-effort:
   const ct = res.headers.get("content-type") || "";
   const text = ct.includes("application/json") ? JSON.stringify(await res.json()) : await res.text();
-
-  if(!res.ok){
-    throw new Error(`WebApp error: HTTP ${res.status} · ${text.slice(0, 160)}`);
-  }
+  if(!res.ok) throw new Error(`WebApp error: HTTP ${res.status} · ${text.slice(0, 160)}`);
   return text;
 }
 
-function submitViaGoogleForm(payload){
-  // You MUST replace GOOGLE_FORM_URL and all entry IDs.
-  if(!GOOGLE_FORM_URL || GOOGLE_FORM_URL.includes("<<")){
-    throw new Error("Google Form URL is not set (GOOGLE_FORM_URL).");
-  }
-
-  // Build and open prefill URL
-  const prefillUrl = buildPrefillUrl(GOOGLE_FORM_URL, GOOGLE_FORM_ENTRY_MAP, payload);
-
-  // If entry placeholders were not replaced, the URL will have fewer params; still open.
-  window.open(prefillUrl, "_blank", "noopener,noreferrer");
-  return prefillUrl;
-}
-
-/**
- * ===========================
- * SUBMIT HANDLER
- * ===========================
- */
 async function onSubmit(){
   const payload = buildPayload();
   const errors = validatePayload(payload);
 
-  // Always refresh preview at submit time
   elPayloadPreview.textContent = JSON.stringify(payload, null, 2);
 
   if(errors.length){
@@ -1152,12 +1063,10 @@ async function onSubmit(){
     return;
   }
 
-  // Submit
   try{
     if(state.submitMethod === "FORM"){
       const url = submitViaGoogleForm(payload);
-      renderStatus("OK", "Opened Google Form prefill in a new tab.", "good");
-      // Optional: also show the built URL in console (no secrets)
+      renderStatus("OK", "Opened Google Form prefill in a new tab. Submit the form to write to the Sheet.", "good");
       console.log("Prefill URL:", url);
     }else{
       renderStatus("SEND", "Posting JSON to Apps Script Web App...", "warn");
